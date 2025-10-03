@@ -22,16 +22,31 @@ app.post("/api/query", async (req, res) => {
   try {
     const { question, lat, lon } = req.body;
 
-    // 1️⃣ تحليل السؤال → كلمة مفتاحية
-    const analysis = await askDobby(`استخرج كلمة بحث واحدة من السؤال التالي: ${question}`);
+    // ✅ اطبع اللي جاي من الفرونت اند
+    console.log("🟢 Incoming request:", { question, lat, lon });
 
-    // 2️⃣ البحث في Foursquare
-    const results = await searchPlaces(analysis, lat, lon);
+    if (!lat || !lon) {
+      return res.status(400).json({ error: "❌ Location (lat, lon) is required" });
+    }
 
-    // 3️⃣ إعادة صياغة النتيجة
+    // ✅ حالياً هنخلي الكلمة دايمًا restaurant للاختبار
+    let analysis = "restaurant";
+
+    console.log("🔍 Final query to Foursquare:", analysis);
+
+    // ✅ ابحث في Foursquare
+    let results = await searchPlaces(analysis, lat, lon);
+    console.log("📌 Foursquare results:", results);
+
+    // fallback
+    if (!results || results.length === 0) {
+      results = [{ name: "❌ لا توجد نتائج من Foursquare", address: "—" }];
+    }
+
+    // ✅ صياغة النتائج
     const formatted = await askDobby(`
       هذه نتائج بحث من Foursquare: ${JSON.stringify(results)} 
-      رجاءً أعرضها للمستخدم كقائمة أماكن مع العناوين بالعربية إن أمكن.
+      رجاءً أعرضها للمستخدم كقائمة أماكن وعناوين.
     `);
 
     res.json({ query: question, analysis, results, formatted });
