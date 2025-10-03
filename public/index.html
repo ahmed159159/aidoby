@@ -2,13 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AI ASSENT</title>
+  <title>Dobby AI Assistant</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
+    #app { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; }
+    input, button { padding: 10px; margin-top: 10px; width: 100%; }
+    .result { margin-top: 20px; background: #eee; padding: 10px; border-radius: 6px; }
+  </style>
 </head>
 <body>
-  <h1>AI ASSENT 🍽️☕🏛️</h1>
-  <input id="question" type="text" placeholder="اسألني فين تخرج.." />
-  <button onclick="ask()">اسأل</button>
-  <pre id="output"></pre>
+  <div id="app">
+    <h2>🤖 AI Dobby Assistant</h2>
+    <input id="question" type="text" placeholder="اسأل: فين اتعشى تحت 200 جنيه؟" />
+    <button onclick="ask()">Ask</button>
+    <div id="output"></div>
+  </div>
 
   <script>
     async function ask() {
@@ -19,7 +27,13 @@
         body: JSON.stringify({ question })
       });
       const data = await res.json();
-      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+      document.getElementById("output").innerHTML = `
+        <div class="result">
+          <strong>Analysis:</strong> ${data.analysis}<br/><br/>
+          <strong>Results:</strong><br/>
+          ${data.results.map(r => r.name).join("<br/>")}
+        </div>
+      `;
     }
   </script>
 </body>
