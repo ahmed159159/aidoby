@@ -1,19 +1,21 @@
 import fetch from "node-fetch";
 
-export async function searchPlaces(query) {
-  const response = await fetch(
-    `https://api.foursquare.com/v3/places/search?query=${encodeURIComponent(query)}&near=Cairo&limit=5`,
-    {
-      headers: {
-        "Authorization": process.env.FOURSQUARE_API_KEY
-      }
-    }
-  );
+const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
-  if (!response.ok) {
-    throw new Error(`Foursquare API error: ${response.status}`);
+export async function searchPlaces(query, lat, lon) {
+  try {
+    const url = `https://api.foursquare.com/v3/places/search?query=${encodeURIComponent(query)}&ll=${lat},${lon}&limit=5`;
+
+    const res = await fetch(url, {
+      headers: { Authorization: FOURSQUARE_API_KEY }
+    });
+
+    if (!res.ok) throw new Error("Foursquare API error");
+
+    const data = await res.json();
+    return data.results || [];
+  } catch (err) {
+    console.error("❌ Error in Foursquare:", err.message);
+    return [];
   }
-
-  const data = await response.json();
-  return data.results || [];
 }
