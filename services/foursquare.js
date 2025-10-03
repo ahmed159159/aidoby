@@ -10,6 +10,10 @@ export async function searchPlaces(query) {
     }
   );
 
+  if (!response.ok) {
+    throw new Error(`Foursquare API error: ${response.status}`);
+  }
+
   const data = await response.json();
   return data.results || [];
 }
