@@ -23,15 +23,15 @@ app.post("/api/query", async (req, res) => {
   try {
     const { question } = req.body;
 
-    // 1- تحليل السؤال مع Dobby
+    // ✅ تحليل السؤال مع Dobby (للعرض فقط)
     const analysis = await askDobby(question);
 
-    // 2- البحث في Foursquare
-    const results = await searchPlaces(analysis);
+    // ✅ البحث في Foursquare باستخدام السؤال الأصلي مباشرة
+    const results = await searchPlaces(question);
 
     res.json({ analysis, results });
   } catch (err) {
-    console.error(err.message);
+    console.error("❌ Error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
