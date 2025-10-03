@@ -9,7 +9,7 @@
     #chat { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; }
     textarea { width: 100%; padding: 10px; }
     button { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
-    pre { background: #eee; padding: 10px; border-radius: 5px; }
+    pre { background: #eee; padding: 10px; border-radius: 5px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -25,7 +25,6 @@
       const question = document.getElementById("question").value;
       document.getElementById("response").innerHTML = "⏳ جاري المعالجة...";
 
-      // تحديد الموقع
       navigator.geolocation.getCurrentPosition(async (pos) => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
@@ -38,10 +37,10 @@
 
         const data = await res.json();
         document.getElementById("response").innerHTML =
-          `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+          `<pre>${data.formatted}</pre>`;
       },
       (err) => {
-        document.getElementById("response").innerHTML = "⚠️ فشل الحصول على الموقع: " + err.message;
+        document.getElementById("response").innerHTML = "⚠️ لم يتم تحديد الموقع: " + err.message;
       });
     }
   </script>
