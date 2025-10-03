@@ -22,13 +22,19 @@ app.post("/api/query", async (req, res) => {
   try {
     const { question, lat, lon } = req.body;
 
-    // تحليل السؤال بدوبي
-    const analysis = await askDobby(question);
+    // 1️⃣ تحليل السؤال → كلمة مفتاحية
+    const analysis = await askDobby(`استخرج كلمة بحث واحدة من السؤال التالي: ${question}`);
 
-    // البحث في Foursquare باستخدام الموقع
-    const results = await searchPlaces(question, lat, lon);
+    // 2️⃣ البحث في Foursquare
+    const results = await searchPlaces(analysis, lat, lon);
 
-    res.json({ analysis, results });
+    // 3️⃣ إعادة صياغة النتيجة
+    const formatted = await askDobby(`
+      هذه نتائج بحث من Foursquare: ${JSON.stringify(results)} 
+      رجاءً أعرضها للمستخدم كقائمة أماكن مع العناوين بالعربية إن أمكن.
+    `);
+
+    res.json({ query: question, analysis, results, formatted });
   } catch (err) {
     console.error("❌ API Error:", err.message);
     res.status(500).json({ error: err.message });
