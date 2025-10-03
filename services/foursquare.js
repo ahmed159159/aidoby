@@ -2,28 +2,33 @@ import fetch from "node-fetch";
 
 const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
+// دالة البحث في Foursquare
 export async function searchPlaces(query, lat, lon) {
   try {
-    // 🟢 تأكد الكلمة المفتاحية بالإنجليزية
-    const keyword = encodeURIComponent(query);
+    const url = `https://api.foursquare.com/v3/places/search?query=${encodeURIComponent(query)}&ll=${lat},${lon}&limit=5`;
 
-    const url = `https://api.foursquare.com/v3/places/search?query=${keyword}&ll=${lat},${lon}&limit=5`;
-
-    console.log("🔎 Foursquare URL:", url);
-
-    const res = await fetch(url, {
-      headers: { Authorization: FOURSQUARE_API_KEY }
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        Authorization: FOURSQUARE_API_KEY,
+      },
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Foursquare API error: ${errText}`);
+    if (!response.ok) {
+      throw new Error(`Foursquare API error: ${response.statusText}`);
     }
 
-    const data = await res.json();
-    return data.results || [];
-  } catch (err) {
-    console.error("❌ Error in Foursquare:", err.message);
+    const data = await response.json();
+
+    // نرجع الأماكن الأساسية
+    return data.results.map((place) => ({
+      name: place.name,
+      address: place.location.formatted_address,
+      category: place.categories?.[0]?.name || "Unknown",
+      distance: place.distance,
+    }));
+  } catch (error) {
+    console.error("❌ Error in searchPlaces:", error.message);
     return [];
   }
 }
