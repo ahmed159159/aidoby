@@ -1,19 +1,26 @@
 import fetch from "node-fetch";
 
-export async function askDobby(question) {
-  const response = await fetch("https://api.fireworks.ai/inference/v1/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.DOBBY_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model: "sentientfoundation/dobby-unhinged-llama-3-3-70b-new",
-      prompt: question,
-      max_tokens: 100
-    })
-  });
+const DOBBY_API_KEY = process.env.DOBBY_API_KEY;
 
-  const data = await response.json();
-  return data.choices?.[0]?.text || "⚠️ No response from Dobby";
+export async function askDobby(question) {
+  try {
+    const res = await fetch("https://api.fireworks.ai/inference/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${DOBBY_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "sentientfoundation/dobby-unhinged-llama-3-3-70b-new",
+        messages: [{ role: "user", content: question }],
+        max_tokens: 200
+      })
+    });
+
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || "No response";
+  } catch (err) {
+    console.error("❌ Error in Dobby:", err.message);
+    return "Error with Dobby";
+  }
 }
