@@ -1,22 +1,15 @@
-import axios from "axios";
+import fetch from "node-fetch";
 
 export async function searchPlaces(query) {
-  const url = "https://api.foursquare.com/v3/places/search";
+  const response = await fetch(
+    `https://api.foursquare.com/v3/places/search?query=${encodeURIComponent(query)}&near=Cairo&limit=5`,
+    {
+      headers: {
+        "Authorization": process.env.FOURSQUARE_API_KEY
+      }
+    }
+  );
 
-  const resp = await axios.get(url, {
-    params: {
-      query: query,
-      near: "Cairo",
-      limit: 5
-    },
-    headers: {
-      Authorization: process.env.FOURSQUARE_API_KEY,
-    },
-  });
-
-  return resp.data.results.map((place) => ({
-    name: place.name,
-    address: place.location?.formatted_address || "No address",
-    categories: place.categories?.map((c) => c.name).join(", ") || "Unknown"
-  }));
+  const data = await response.json();
+  return data.results || [];
 }
