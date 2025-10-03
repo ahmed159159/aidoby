@@ -10,7 +10,7 @@ export async function askDobby(question) {
     body: JSON.stringify({
       model: "sentientfoundation/dobby-unhinged-llama-3-3-70b-new",
       prompt: question,
-      max_tokens: 150
+      max_tokens: 100
     })
   });
 
