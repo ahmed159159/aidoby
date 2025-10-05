@@ -3,8 +3,8 @@ import fetch from "node-fetch";
 
 const API_KEY = process.env.FOURSQUARE_API_KEY;
 
-// ✅ استخدم دومين الجديد + هيدرات النسخة
-const BASE_URL = "https://places-api.foursquare.com";
+// ✅ دومين الأساسي
+const BASE_URL = "https://api.foursquare.com/v3";
 
 export async function searchPlaces(query, lat, lon, limit = 5) {
   try {
@@ -16,9 +16,9 @@ export async function searchPlaces(query, lat, lon, limit = 5) {
     const res = await fetch(url, {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${API_KEY}`,   // ✅ Bearer token
+        "Authorization": API_KEY, // ✅ Key مباشرة من غير Bearer
         "Accept": "application/json",
-        "X-Places-API-Version": "2025-06-17"    // ✅ لازم تحدد نسخة
+        "X-Places-API-Version": "20240301", // ✅ نسخة ثابتة ومعتمدة
       },
     });
 
@@ -32,13 +32,14 @@ export async function searchPlaces(query, lat, lon, limit = 5) {
     const data = JSON.parse(raw);
 
     // ✅ رجّع البيانات بشكل مرتب
-    return data.results?.map(place => ({
-      id: place.fsq_place_id,
-      name: place.name,
-      address: place.location?.formatted_address,
-      categories: place.categories?.map(c => c.name).join(", ")
-    })) || [];
-
+    return (
+      data.results?.map((place) => ({
+        id: place.fsq_id,
+        name: place.name,
+        address: place.location?.formatted_address,
+        categories: place.categories?.map((c) => c.name).join(", "),
+      })) || []
+    );
   } catch (err) {
     console.error("❌ Error in searchPlaces:", err.message);
     return [];
