@@ -1,43 +1,45 @@
 import fetch from "node-fetch";
 
-const FSQ_API_KEY = process.env.FOURSQUARE_API_KEY;
+const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
 
+// دالة البحث في Foursquare (API الجديد)
 export async function searchPlaces(query, lat, lon) {
   try {
-    // ✅ Debug: نشوف هل المفتاح واصل
-    console.log("🔑 Using API Key:", FSQ_API_KEY ? FSQ_API_KEY.slice(0, 10) + "..." : "❌ NOT FOUND");
-
     const url = `https://api.foursquare.com/v3/places/search?query=${encodeURIComponent(
       query
     )}&ll=${lat},${lon}&limit=5`;
 
+    console.log("🔑 Using API Key:", FOURSQUARE_API_KEY?.substring(0, 10) + "...");
     console.log("🌍 Fetching from URL:", url);
 
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
-        Authorization: FSQ_API_KEY, // لازم يكون المفتاح كامل
+        Authorization: FOURSQUARE_API_KEY, // لازم يكون fsq3...
       },
     });
 
+    const text = await response.text();
+
     if (!response.ok) {
-      const errText = await response.text();
-      console.error("❌ Full Foursquare error:", response.status, response.statusText, errText);
+      console.error("❌ Full Foursquare error:", response.status, text);
       throw new Error(`Foursquare API error: ${response.status} - ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = JSON.parse(text);
 
-    // ✅ Debug: نشوف الريسبونس جاي فيه إيه
-    console.log("📦 Raw Foursquare response:", JSON.stringify(data, null, 2));
+    // ✅ لو مفيش نتائج
+    if (!data.results || data.results.length === 0) {
+      return [];
+    }
 
-    return data.results?.map((place) => ({
+    // ✅ نرجع الأماكن
+    return data.results.map((place) => ({
       name: place.name,
-      address: place.location?.formatted_address || "No address",
+      address: place.location?.formatted_address || "—",
       category: place.categories?.[0]?.name || "Unknown",
       distance: place.distance,
-    })) || [];
-
+    }));
   } catch (error) {
     console.error("❌ Error in searchPlaces:", error.message);
     return [];
