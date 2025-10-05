@@ -1,47 +1,46 @@
+// services/foursquare.js
 import fetch from "node-fetch";
 
-const FOURSQUARE_API_KEY = process.env.FOURSQUARE_API_KEY;
+const API_KEY = process.env.FOURSQUARE_API_KEY;
 
-// دالة البحث في Foursquare (API الجديد)
-export async function searchPlaces(query, lat, lon) {
+// ✅ استخدم دومين الجديد + هيدرات النسخة
+const BASE_URL = "https://places-api.foursquare.com";
+
+export async function searchPlaces(query, lat, lon, limit = 5) {
   try {
-    const url = `https://api.foursquare.com/v3/places/search?query=${encodeURIComponent(
-      query
-    )}&ll=${lat},${lon}&limit=5`;
+    const url = `${BASE_URL}/places/search?query=${encodeURIComponent(query)}&ll=${lat},${lon}&limit=${limit}`;
 
-    console.log("🔑 Using API Key:", FOURSQUARE_API_KEY?.substring(0, 10) + "...");
     console.log("🌍 Fetching from URL:", url);
+    console.log("🔑 Using API Key:", API_KEY?.slice(0, 10) + "...");
 
-    const response = await fetch(url, {
+    const res = await fetch(url, {
+      method: "GET",
       headers: {
-        Accept: "application/json",
-        Authorization: FOURSQUARE_API_KEY, // لازم يكون fsq3...
+        "Authorization": `Bearer ${API_KEY}`,   // ✅ Bearer token
+        "Accept": "application/json",
+        "X-Places-API-Version": "2025-06-17"    // ✅ لازم تحدد نسخة
       },
     });
 
-    const text = await response.text();
+    const raw = await res.text();
 
-    if (!response.ok) {
-      console.error("❌ Full Foursquare error:", response.status, text);
-      throw new Error(`Foursquare API error: ${response.status} - ${response.statusText}`);
+    if (!res.ok) {
+      console.error("❌ Full Foursquare error:", raw);
+      throw new Error(`Foursquare API error: ${res.status} - ${res.statusText}`);
     }
 
-    const data = JSON.parse(text);
+    const data = JSON.parse(raw);
 
-    // ✅ لو مفيش نتائج
-    if (!data.results || data.results.length === 0) {
-      return [];
-    }
-
-    // ✅ نرجع الأماكن
-    return data.results.map((place) => ({
+    // ✅ رجّع البيانات بشكل مرتب
+    return data.results?.map(place => ({
+      id: place.fsq_place_id,
       name: place.name,
-      address: place.location?.formatted_address || "—",
-      category: place.categories?.[0]?.name || "Unknown",
-      distance: place.distance,
-    }));
-  } catch (error) {
-    console.error("❌ Error in searchPlaces:", error.message);
+      address: place.location?.formatted_address,
+      categories: place.categories?.map(c => c.name).join(", ")
+    })) || [];
+
+  } catch (err) {
+    console.error("❌ Error in searchPlaces:", err.message);
     return [];
   }
 }
