@@ -10,12 +10,12 @@ export async function searchPlaces(query, lat, lon) {
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
-        Authorization: FOURSQUARE_API_KEY,
+        Authorization: `Bearer ${FOURSQUARE_API_KEY}`, // ✅ لازم Bearer
       },
     });
 
     if (!response.ok) {
-      throw new Error(`Foursquare API error: ${response.statusText}`);
+      throw new Error(`Foursquare API error: ${response.status} - ${response.statusText}`);
     }
 
     const data = await response.json();
