@@ -1,0 +1,30 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #f7f7f7;
+  padding: 20px;
+}
+
+input {
+  padding: 10px;
+  width: 300px;
+  margin: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+#response, #places {
+  margin-top: 20px;
+}
+
+.place {
+  background: white;
+  margin: 10px auto;
+  padding: 10px;
+  width: 400px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
