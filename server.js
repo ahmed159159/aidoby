@@ -8,60 +8,40 @@ import { askDobby } from "./services/dobby.js";
 import { searchPlaces } from "./services/foursquare.js";
 
 dotenv.config();
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Frontend
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// ✅ Serve frontend
 app.use(express.static(path.join(__dirname, "public")));
 
-// API Endpoint
+// ✅ API endpoint
 app.post("/api/query", async (req, res) => {
   try {
     const { question, lat, lon } = req.body;
 
-    console.log("🟢 Incoming request:", { question, lat, lon });
+    // ⭕ تحليل السؤال عن طريق دوبي
+    const dobbyResponse = await askDobby(question);
 
-    if (!lat || !lon) {
-      return res.status(400).json({ error: "❌ Location (lat, lon) is required" });
+    // ⭕ لو دوبي قال في نوع أكل/مكان → استدعاء Foursquare
+    let places = [];
+    if (dobbyResponse.intent === "search_place") {
+      places = await searchPlaces(dobbyResponse.query, lat, lon, 5);
     }
 
-    // 🧠 خلي Dooby يحلل السؤال
-    const analysis = await askDobby(`
-      السؤال: "${question}"
-      مطلوب منك تحديد نوع المكان المناسب للبحث في Foursquare.
-      إذا كان السؤال عن "مطعم سمك" → رجّع "seafood".
-      إذا كان "بيتزا" → رجّع "pizza".
-      إذا كان "كافيه" → رجّع "coffee shop".
-      إذا لم تفهم → رجّع "restaurant".
-      رجّع كلمة واحدة فقط: نوع البحث المناسب.
-    `);
+    res.json({
+      dobby: dobbyResponse.message,
+      places: places
+    });
 
-    const query = (analysis || "restaurant").toLowerCase().trim();
-    console.log("🔍 Final query to Foursquare:", query);
-
-    // ✅ ابحث في Foursquare API الجديد
-    let results = await searchPlaces(query, lat, lon);
-    console.log("📌 Foursquare results:", results);
-
-    if (!results || results.length === 0) {
-      results = [{ name: "❌ لا توجد نتائج من Foursquare", address: "—" }];
-    }
-
-    // 🧠 خلي Dooby يرتب الرد النهائي للمستخدم
-    const formatted = await askDobby(`
-      هذه نتائج بحث من Foursquare: ${JSON.stringify(results)} 
-      رجاءً أعرضها للمستخدم في شكل قائمة أماكن وعناوين واضحة.
-    `);
-
-    res.json({ query: question, analysis: query, results, formatted });
-  } catch (err) {
-    console.error("❌ API Error:", err.message);
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "خطأ في السيرفر" });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(3000, () => console.log("🚀 Server running on http://localhost:3000"));
