@@ -28,25 +28,35 @@ app.post("/api/query", async (req, res) => {
       return res.status(400).json({ error: "❌ Location (lat, lon) is required" });
     }
 
-    // مؤقتًا نحول أي سؤال لـ "restaurant"
-    let analysis = "restaurant";
+    // 🧠 خلي Dooby يحلل السؤال
+    const analysis = await askDobby(`
+      السؤال: "${question}"
+      مطلوب منك تحديد نوع المكان المناسب للبحث في Foursquare.
+      إذا كان السؤال عن "مطعم سمك" → رجّع "seafood".
+      إذا كان "بيتزا" → رجّع "pizza".
+      إذا كان "كافيه" → رجّع "coffee shop".
+      إذا لم تفهم → رجّع "restaurant".
+      رجّع كلمة واحدة فقط: نوع البحث المناسب.
+    `);
 
-    console.log("🔍 Final query to Foursquare:", analysis);
+    const query = (analysis || "restaurant").toLowerCase().trim();
+    console.log("🔍 Final query to Foursquare:", query);
 
     // ✅ ابحث في Foursquare API الجديد
-    let results = await searchPlaces(analysis, lat, lon);
+    let results = await searchPlaces(query, lat, lon);
     console.log("📌 Foursquare results:", results);
 
     if (!results || results.length === 0) {
       results = [{ name: "❌ لا توجد نتائج من Foursquare", address: "—" }];
     }
 
+    // 🧠 خلي Dooby يرتب الرد النهائي للمستخدم
     const formatted = await askDobby(`
       هذه نتائج بحث من Foursquare: ${JSON.stringify(results)} 
-      رجاءً أعرضها للمستخدم كقائمة أماكن وعناوين.
+      رجاءً أعرضها للمستخدم في شكل قائمة أماكن وعناوين واضحة.
     `);
 
-    res.json({ query: question, analysis, results, formatted });
+    res.json({ query: question, analysis: query, results, formatted });
   } catch (err) {
     console.error("❌ API Error:", err.message);
     res.status(500).json({ error: err.message });
