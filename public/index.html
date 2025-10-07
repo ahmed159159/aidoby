@@ -1,48 +1,19 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🤖 AI Dobby Assistant</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
-    #chat { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; }
-    textarea { width: 100%; padding: 10px; }
-    button { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
-    pre { background: #eee; padding: 10px; border-radius: 5px; white-space: pre-wrap; }
-  </style>
+  <meta charset="UTF-8">
+  <title>Dobby Travel AI</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="chat">
-    <h2>🤖 AI Dobby Assistant</h2>
-    <textarea id="question" placeholder="اسأل أي سؤال..."></textarea>
-    <button onclick="ask()">Ask</button>
-    <div id="response"></div>
-  </div>
+  <h1>🤖 دوبي - مساعدك السياحي</h1>
 
-  <script>
-    async function ask() {
-      const question = document.getElementById("question").value;
-      document.getElementById("response").innerHTML = "⏳ جاري المعالجة...";
+  <input type="text" id="question" placeholder="اسأل دوبي...">
+  <button onclick="askDobby()">اسأل</button>
 
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+  <div id="response"></div>
+  <div id="places"></div>
 
-        const res = await fetch("/api/query", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question, lat, lon })
-        });
-
-        const data = await res.json();
-        document.getElementById("response").innerHTML =
-          `<pre>${data.formatted}</pre>`;
-      },
-      (err) => {
-        document.getElementById("response").innerHTML = "⚠️ لم يتم تحديد الموقع: " + err.message;
-      });
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
