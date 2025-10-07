@@ -1,7 +1,6 @@
 {
-  "name": "aidobby",
+  "name": "dobby-travel-ai",
   "version": "1.0.0",
-  "description": "AI Dobby Assistant with Foursquare",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -9,8 +8,9 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "@fireworks-ai/sdk": "^0.9.0",
     "node-fetch": "^3.3.2"
   }
 }
