@@ -1,59 +1,44 @@
-import { searchPlaces } from "./foursquare.js";
+import Fireworks from "@fireworks-ai/sdk";
 
-// ✅ دوبي: العقل الذكي
+const client = new Fireworks({
+  apiKey: process.env.FIREWORKS_API_KEY
+});
+
+// ✅ systemPrompt
+const systemPrompt = `
+You are Dobby 🤖, a friendly AI travel assistant.
+Your job:
+1. Understand user questions (food, cafes, entertainment).
+2. If unclear → ask a clarification question.
+3. If clear → return an intent = "search_place" + query text.
+4. If it's just chatting → intent = "chat".
+
+Return JSON ONLY:
+{
+  "intent": "search_place" | "chat",
+  "message": "your reply to the user",
+  "query": "if search_place, put search keyword here"
+}
+`;
+
 export async function askDobby(question) {
-  question = question.toLowerCase();
+  const response = await client.chat.completions.create({
+    model: "accounts/fireworks/models/llama-v3p1-70b-instruct",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: question }
+    ],
+    temperature: 0.5,
+    max_tokens: 300
+  });
 
-  // --- لو السؤال عن مطاعم ---
-  if (question.includes("مطعم") || question.includes("اكل") || question.includes("restaurant")) {
-    let category = null;
-
-    // تصنيف حسب نوع الأكل
-    if (question.includes("سمك") || question.includes("seafood")) category = "4bf58dd8d48988d1ce941735"; // Seafood
-    if (question.includes("بيتزا") || question.includes("pizza")) category = "4bf58dd8d48988d1ca941735"; // Pizza
-    if (question.includes("لحمة") || question.includes("ستيك") || question.includes("meat") || question.includes("steak")) category = "4bf58dd8d48988d1cc941735"; // Steakhouse
-    if (question.includes("شعبي") || question.includes("popular")) category = "52e81612bcbc57f1066b7a00"; // Middle Eastern / Egyptian popular food
-
-    // استدعاء Foursquare
-    const results = await searchPlaces({
-      ll: "31.044839,31.406334", // إحداثيات الموقع (ممكن نخليها Dynamic من المستخدم لاحقاً)
-      category,
-      limit: 5
-    });
-
-    if (!results.length) {
-      return "🙁 دوبي: معنديش نتائج دلوقتي حسب طلبك، جرب نوع أكل تاني.";
-    }
-
-    // صياغة الرد بشكل منظم
-    let reply = "🏠 أقرب المطاعم لطلبك:\n";
-    reply += results.map((r, i) => 
-      `${i+1}. 📍 ${r.name} - ${r.location.formatted_address || "بدون عنوان"}`
-    ).join("\n");
-
-    return reply;
+  try {
+    return JSON.parse(response.choices[0].message.content);
+  } catch (e) {
+    return {
+      intent: "chat",
+      message: "ممكن تعيد صياغة سؤالك؟",
+      query: ""
+    };
   }
-
-  // --- لو السؤال عن كافيه ---
-  if (question.includes("كافيه") || question.includes("قهوة") || question.includes("cafe") || question.includes("coffee")) {
-    const results = await searchPlaces({
-      ll: "31.044839,31.406334",
-      category: "4bf58dd8d48988d16d941735", // Coffee Shop
-      limit: 5
-    });
-
-    if (!results.length) {
-      return "☕ دوبي: ملاقتش كافيهات قريبة.";
-    }
-
-    let reply = "☕ أقرب الكافيهات:\n";
-    reply += results.map((r, i) => 
-      `${i+1}. 📍 ${r.name} - ${r.location.formatted_address || "بدون عنوان"}`
-    ).join("\n");
-
-    return reply;
-  }
-
-  // --- رد عام لأي أسئلة تانية ---
-  return "🤖 دوبي: ممكن تسألني عن أقرب مطاعم (بيتزا، سمك، لحمة، شعبي) أو كافيهات وأنا هساعدك.";
 }
