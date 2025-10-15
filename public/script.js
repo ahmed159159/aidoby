@@ -1,10 +1,18 @@
 async function askDobby() {
   const question = document.getElementById("question").value;
-  
-  // جلب موقع المستخدم
+  const responseBox = document.getElementById("response");
+  const placesBox = document.getElementById("places");
+
+  // مسح النتائج القديمة
+  responseBox.innerHTML = "⏳ جاري التفكير...";
+  placesBox.innerHTML = "";
+
+  // 🔍 الحصول على الموقع بدقة وانتظار النتيجة
   navigator.geolocation.getCurrentPosition(async (pos) => {
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
+
+    console.log("📍 Location:", lat, lon);
 
     const res = await fetch("/api/query", {
       method: "POST",
@@ -14,22 +22,27 @@ async function askDobby() {
 
     const data = await res.json();
 
-    document.getElementById("response").innerHTML = `<p><b>دوبي:</b> ${data.dobby}</p>`;
+    if (data.error) {
+      responseBox.innerHTML = `❌ خطأ: ${data.error}`;
+      return;
+    }
 
-    if (data.places.length > 0) {
-      document.getElementById("places").innerHTML = data.places.map(p => `
+    responseBox.innerHTML = `<p><b>دوبي:</b> ${data.dobby}</p>`;
+
+    if (data.places && data.places.length > 0) {
+      placesBox.innerHTML = data.places.map(p => `
         <div class="place">
           <h3>${p.name}</h3>
-          <p>📍 ${p.address}</p>
-          <p>📏 ${p.distance} متر</p>
-          <p>🏷️ ${p.categories}</p>
+          <p>📍 ${p.address || "العنوان غير متوفر"}</p>
+          <p>📏 ${p.distance || "?"} متر</p>
+          <p>🏷️ ${p.categories || "?"}</p>
         </div>
       `).join("");
     } else {
-      document.getElementById("places").innerHTML = "";
+      placesBox.innerHTML = "<p>🙁 لا توجد أماكن قريبة.</p>";
     }
 
   }, (err) => {
-    alert("محتاج إذن للوصول لموقعك");
+    responseBox.innerHTML = "⚠️ من فضلك اسمح بالوصول لموقعك.";
   });
 }
