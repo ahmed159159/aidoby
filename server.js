@@ -3,7 +3,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-
 import { askDobby } from "./services/dobby.js";
 import { searchPlaces } from "./services/foursquare.js";
 
@@ -23,11 +22,16 @@ app.use(express.static(path.join(__dirname, "public")));
 app.post("/api/query", async (req, res) => {
   try {
     const { question, lat, lon } = req.body;
+    console.log("🟢 Incoming:", req.body);
 
-    // ⭕ تحليل السؤال عن طريق دوبي
+    if (!lat || !lon) {
+      return res.status(400).json({ error: "Missing location data" });
+    }
+
+    // ✅ تحليل السؤال
     const dobbyResponse = await askDobby(question);
 
-    // ⭕ لو دوبي قال في نوع أكل/مكان → استدعاء Foursquare
+    // ✅ لو فيه نية بحث عن مكان
     let places = [];
     if (dobbyResponse.intent === "search_place") {
       places = await searchPlaces(dobbyResponse.query, lat, lon, 5);
@@ -35,12 +39,12 @@ app.post("/api/query", async (req, res) => {
 
     res.json({
       dobby: dobbyResponse.message,
-      places: places
+      places: places,
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "خطأ في السيرفر" });
+    console.error("❌ Server error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
